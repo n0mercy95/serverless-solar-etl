@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+polars
+pyarrow
+google-cloud-bigquery
+google-cloud-storage
+google-cloud-logging
+pydantic
+pydantic-settings
+requests
+python-dotenv
+httpx
