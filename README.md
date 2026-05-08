@@ -21,17 +21,21 @@
 
 El desarrollo de este proyecto está dividido en milestones progresivos:
 
-* [x] **Fase 0: Setup Inicial**
+* [x] **Fase 0: Setup Inicial & Preprocesamiento Off-line**
     * Definición del Product Requirements Document (PRD).
     * Configuración del repositorio, `.gitignore` y variables de entorno base.
-* [cite_start][ ] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta** [cite: 350]
-    * [cite_start]Implementación de capas de ingesta usando el Patrón Factory[cite: 352].
-* [cite_start][ ] **Fase 2: Transformación Analítica, Fusión Numérica y Perfilado** [cite: 354]
-    * [cite_start]Carga perezosa con Polars y ejecución de joins temporales[cite: 355].
-    * [cite_start]Aplicación del Patrón Strategy para la purga heurística y manejo de anomalías[cite: 357].
-* [cite_start][ ] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad** [cite: 359]
-    * [cite_start]Implementación de JSON Structured Logging integrado con Google Cloud Logging[cite: 346].
-    * [cite_start]Ejecución atómica e idempotente del BigQuery Load Job[cite: 360].
-* [cite_start][ ] **Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta** [cite: 361]
-    * [cite_start]Desarrollo de la API con FastAPI y Pydantic[cite: 362].
-    * [cite_start]Despliegue final de la imagen multi-stage en Google Cloud Run[cite: 364, 365].
+    * **Preprocesamiento Off-line:** Creación del script `scripts/consolidate_pvod.py` con Polars para consolidar los 10 CSVs del dataset PVOD en un único archivo maestro `data/pvod.csv`, validando sus 271,968 registros e incluyendo la columna `station_id` para el clustering en BigQuery.
+* [ ] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta**
+    * [x] **Fase 1.0 (Entorno de Desarrollo):** Configuración de la Cuenta de Servicio en Google Cloud con roles estrictos (BigQuery Editor/User, Storage Creator, Logging Writer) y obtención de las credenciales base para `.env.example` (`GCP_PROJECT_ID`, `GOOGLE_APPLICATION_CREDENTIALS`).
+    * [x] **Fase 1.1 (BigQuery):** Creación del Dataset en BigQuery (`solar_etl_dataset`) y definición de la tabla destino (`pvod_metrics`).
+    * [x] **Fase 1.2 (Cloud Storage):** Creación y configuración del GCS Bucket (Capa Oro) multiregional (`GCS_BUCKET_NAME`).
+    * [ ] Implementación de capas de ingesta usando el Patrón Factory.
+* [ ] **Fase 2: Transformación Analítica, Fusión Numérica y Perfilado**
+    * Carga perezosa con Polars y ejecución de joins temporales.
+    * Aplicación del Patrón Strategy para la purga heurística y manejo de anomalías.
+* [ ] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad**
+    * Implementación de JSON Structured Logging integrado con Google Cloud Logging.
+    * Ejecución atómica e idempotente del BigQuery Load Job.
+* [ ] **Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta**
+    * Desarrollo de la API con FastAPI y Pydantic.
+    * Despliegue final de la imagen multi-stage en Google Cloud Run.[cite: 364, 365].
