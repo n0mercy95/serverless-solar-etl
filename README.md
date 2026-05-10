@@ -4,18 +4,18 @@
 
 ## 📖 Descripción del Proyecto
 
-[cite_start]Este proyecto es un sistema de ingeniería de datos nativo en la nube, diseñado para la ingesta automatizada, limpieza matemática estricta, transformación algorítmica y disponibilidad analítica del Photovoltaic Power Output Dataset (PVOD)[cite: 295]. 
+Este proyecto es un sistema de ingeniería de datos nativo en la nube, diseñado para la ingesta automatizada, limpieza matemática estricta, transformación algorítmica y disponibilidad analítica del Photovoltaic Power Output Dataset (PVOD). 
 
-[cite_start]El objetivo principal es habilitar el monitoreo y proporcionar métricas para modelos precisos de pronóstico de potencia fotovoltaica (NWP y LMD), fundamentales para el balanceo de carga en mercados de energía[cite: 296]. [cite_start]El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento[cite: 297].
+El objetivo principal es habilitar el monitoreo y proporcionar métricas para modelos precisos de pronóstico de potencia fotovoltaica (NWP y LMD), fundamentales para el balanceo de carga en mercados de energía. El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento.
 
 ## 🏗️ Arquitectura del Sistema (GCP)
 
-[cite_start]La solución está diseñada bajo principios de Clean Architecture y opera de forma 100% serverless en Google Cloud Platform (GCP)[cite: 299]:
+La solución está diseñada bajo principios de Clean Architecture y opera de forma 100% serverless en Google Cloud Platform (GCP).
 
-* [cite_start]**Orquestación:** Utilización de **Cloud Scheduler** para la invocación asíncrona y automatizada del pipeline ETL[cite: 300].
-* [cite_start]**Almacenamiento Intermedio (Data Lake):** **Cloud Storage** actúa como buffer temporal (nivel oro), almacenando datos extraídos en formato binario altamente comprimido Apache Parquet[cite: 303].
-* [cite_start]**Data Warehouse:** **BigQuery** gestiona la persistencia transaccional ACID de los datos procesados, utilizando esquemas estrictamente tipados y almacenamiento columnar[cite: 304].
-* [cite_start]**Procesamiento y API:** Contenedores Docker inmutables desplegados en **Cloud Run** que alojan las rutinas del ETL (basadas en Polars) y el microservicio de la API (construido con FastAPI)[cite: 301, 307].
+* **Orquestación:** Utilización de **Cloud Scheduler** para la invocación asíncrona y automatizada del pipeline ETL.
+* **Almacenamiento Intermedio (Data Lake):** **Cloud Storage** actúa como buffer temporal (nivel oro), almacenando datos extraídos en formato binario altamente comprimido Apache Parquet.
+* **Data Warehouse:** **BigQuery** gestiona la persistencia transaccional ACID de los datos procesados, utilizando esquemas estrictamente tipados y almacenamiento columnar.
+* **Procesamiento y API:** Contenedores Docker inmutables desplegados en **Cloud Run** que alojan las rutinas del ETL (basadas en Polars) y el microservicio de la API (construido con FastAPI).
 
 ## 🗺️ Roadmap y Próximos Pasos
 
