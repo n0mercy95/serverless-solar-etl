@@ -60,3 +60,24 @@ class IrradianceOutOfBoundsError(DataTransformationError):
     si fallan las validaciones físicas, en lugar de aplicar políticas
     de reintento.
     """
+
+
+# ── Excepciones de Integración Transaccional (Fase 3) ─────────────
+
+class BigQueryConnectionError(SolarETLError):
+    """Fallo de conexión, autenticación o ejecución de un Load Job
+    contra BigQuery.
+
+    PRD §5 exige esta excepción como parte de la jerarquía granular
+    de errores para la integración con el Data Warehouse.
+    """
+
+
+class ObservabilityConfigError(SolarETLError):
+    """Error de configuración del sistema de observabilidad/logging.
+
+    Se lanza cuando:
+    - El nivel de log especificado no es válido.
+    - El handler de Cloud Logging no se pudo inicializar.
+    - Falta el ``gcp_project_id`` requerido para el trace.
+    """
