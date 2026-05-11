@@ -1,6 +1,6 @@
 # ETL Solar Serverless - Procesamiento del Dataset PVOD ☀️
 
-> **Estado del Proyecto:** 🚧 En construcción (Fase 0: Setup Inicial y Diseño de Arquitectura).
+> **Estado del Proyecto:** 🚧 En construcción (Fase 2: Transformación Analítica y Limpieza de Datos).
 
 ## 📖 Descripción del Proyecto
 
@@ -25,14 +25,15 @@ El desarrollo de este proyecto está dividido en milestones progresivos:
     * Definición del Product Requirements Document (PRD).
     * Configuración del repositorio, `.gitignore` y variables de entorno base.
     * **Preprocesamiento Off-line:** Creación del script `scripts/consolidate_pvod.py` con Polars para consolidar los 10 CSVs del dataset PVOD en un único archivo maestro `data/pvod.csv`, validando sus 271,968 registros e incluyendo la columna `station_id` para el clustering en BigQuery.
-* [ ] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta**
+* [x] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta**
     * [x] **Fase 1.0 (Entorno de Desarrollo):** Configuración de la Cuenta de Servicio en Google Cloud con roles estrictos (BigQuery Editor/User, Storage Creator, Logging Writer) y obtención de las credenciales base para `.env.example` (`GCP_PROJECT_ID`, `GOOGLE_APPLICATION_CREDENTIALS`).
     * [x] **Fase 1.1 (BigQuery):** Creación del Dataset en BigQuery (`solar_etl_dataset`) y definición de la tabla destino (`pvod_metrics`).
     * [x] **Fase 1.2 (Cloud Storage):** Creación y configuración del GCS Bucket (Capa Oro) multiregional (`GCS_BUCKET_NAME`).
-    * [ ] Implementación de capas de ingesta usando el Patrón Factory.
-* [ ] **Fase 2: Transformación Analítica, Fusión Numérica y Perfilado**
-    * Carga perezosa con Polars y ejecución de joins temporales.
-    * Aplicación del Patrón Strategy para la purga heurística y manejo de anomalías.
+    * [x] Implementación de capas de ingesta usando el Patrón Factory.
+* [x] **Fase 2: Transformación Analítica, Fusión Numérica y Perfilado**
+    * [x] Carga perezosa con Polars (`scan_csv`) y alineamiento temporal a grilla de 15 minutos.
+    * [x] Aplicación del Patrón Strategy para la purga heurística (NighttimeZeroing, HampelFilter, MissingValueImputer).
+    * [x] Volcado final en Apache Parquet comprimido (Zstandard) a GCS (Capa Oro).
 * [ ] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad**
     * Implementación de JSON Structured Logging integrado con Google Cloud Logging.
     * Ejecución atómica e idempotente del BigQuery Load Job.

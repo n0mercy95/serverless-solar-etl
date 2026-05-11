@@ -30,3 +30,33 @@ class DataSourceUnavailableError(DataExtractionError):
 class DataValidationError(SolarETLError):
     """Los datos extraídos no cumplen las validaciones de integridad
     (buffer vacío, CSV corrupto, conteo de registros incorrecto)."""
+
+
+# ── Excepciones de Transformación (Fase 2) ────────────────────────────
+
+class DataTransformationError(SolarETLError):
+    """Fallo genérico durante la fase de transformación de datos.
+
+    Todas las excepciones específicas de transformación deben heredar
+    de esta clase para permitir captura granular en el pipeline.
+    """
+
+
+class TemporalAlignmentError(DataTransformationError):
+    """Las marcas de tiempo no cumplen la grilla estricta de 15 minutos.
+
+    Se lanza cuando se detectan:
+    - Timestamps duplicados para una misma estación.
+    - Gaps temporales (intervalos > 15 min) en la serie de una estación.
+    - Timestamps que no se alinean a múltiplos exactos de 15 minutos.
+    """
+
+
+class IrradianceOutOfBoundsError(DataTransformationError):
+    """La irradiancia global excede la constante solar extraterrestre
+    o es negativa.
+
+    Restricción física del PRD §4: abortar ejecución inmediatamente
+    si fallan las validaciones físicas, en lugar de aplicar políticas
+    de reintento.
+    """

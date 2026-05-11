@@ -9,18 +9,18 @@ Dado que este proyecto de Energía Solar es robusto y sigue una **Arquitectura d
 
 ## 📖 Descripción del Proyecto
 
-[cite_start]Este proyecto es un sistema de ingeniería de datos nativo en la nube, diseñado para la ingesta automatizada, limpieza matemática estricta, transformación algorítmica y disponibilidad analítica del Photovoltaic Power Output Dataset (PVOD)[cite: 295]. 
+Este proyecto es un sistema de ingeniería de datos nativo en la nube, diseñado para la ingesta automatizada, limpieza matemática estricta, transformación algorítmica y disponibilidad analítica del Photovoltaic Power Output Dataset (PVOD). 
 
-[cite_start]El objetivo principal es habilitar el monitoreo y proporcionar métricas para modelos precisos de pronóstico de potencia fotovoltaica (NWP y LMD), fundamentales para el balanceo de carga en mercados de energía[cite: 296]. [cite_start]El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento[cite: 297].
+El objetivo principal es habilitar el monitoreo y proporcionar métricas para modelos precisos de pronóstico de potencia fotovoltaica (NWP y LMD), fundamentales para el balanceo de carga en mercados de energía. El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento.
 
 ## 🏗️ Arquitectura del Sistema (GCP)
 
-[cite_start]La solución está diseñada bajo principios de Clean Architecture y opera de forma 100% serverless en Google Cloud Platform (GCP)[cite: 299]:
+La solución está diseñada bajo principios de Clean Architecture y opera de forma 100% serverless en Google Cloud Platform (GCP):
 
-* [cite_start]**Orquestación:** Utilización de **Cloud Scheduler** para la invocación asíncrona y automatizada del pipeline ETL[cite: 300].
-* [cite_start]**Almacenamiento Intermedio (Data Lake):** **Cloud Storage** actúa como buffer temporal (nivel oro), almacenando datos extraídos en formato binario altamente comprimido Apache Parquet[cite: 303].
-* [cite_start]**Data Warehouse:** **BigQuery** gestiona la persistencia transaccional ACID de los datos procesados, utilizando esquemas estrictamente tipados y almacenamiento columnar[cite: 304].
-* [cite_start]**Procesamiento y API:** Contenedores Docker inmutables desplegados en **Cloud Run** que alojan las rutinas del ETL (basadas en Polars) y el microservicio de la API (construido con FastAPI)[cite: 301, 307].
+* **Orquestación:** Utilización de **Cloud Scheduler** para la invocación asíncrona y automatizada del pipeline ETL.
+* **Almacenamiento Intermedio (Data Lake):** **Cloud Storage** actúa como buffer temporal (nivel oro), almacenando datos extraídos en formato binario altamente comprimido Apache Parquet.
+* **Data Warehouse:** **BigQuery** gestiona la persistencia transaccional ACID de los datos procesados, utilizando esquemas estrictamente tipados y almacenamiento columnar.
+* **Procesamiento y API:** Contenedores Docker inmutables desplegados en **Cloud Run** que alojan las rutinas del ETL (basadas en Polars) y el microservicio de la API (construido con FastAPI).
 
 ## 🗺️ Roadmap y Próximos Pasos
 
@@ -30,11 +30,15 @@ El desarrollo de este proyecto está dividido en milestones progresivos:
     * Definición del Product Requirements Document (PRD).
     * Configuración del repositorio, `.gitignore` y variables de entorno base.
     * **Preprocesamiento Off-line:** Creación del script `scripts/consolidate_pvod.py` con Polars para consolidar los 10 CSVs del dataset PVOD en un único archivo maestro `data/pvod.csv`, validando sus 271,968 registros e incluyendo la columna `station_id` para el clustering en BigQuery.
-* [ ] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta**
+* [x] **Fase 1: Aprovisionamiento de Infraestructura, Seguridad y Componentes de Ingesta**
     * [x] **Fase 1.0 (Entorno de Desarrollo):** Configuración de la Cuenta de Servicio en Google Cloud con roles estrictos (BigQuery Editor/User, Storage Creator, Logging Writer) y obtención de las credenciales base para `.env.example` (`GCP_PROJECT_ID`, `GOOGLE_APPLICATION_CREDENTIALS`).
     * [x] **Fase 1.1 (BigQuery):** Creación del Dataset en BigQuery (`solar_etl_dataset`) y definición de la tabla destino (`pvod_metrics`).
     * [x] **Fase 1.2 (Cloud Storage):** Creación y configuración del GCS Bucket (Capa Oro) multiregional (`GCS_BUCKET_NAME`).
-    * [ ] Implementación de capas de ingesta usando el Patrón Factory.
+    * [x] Implementación de capas de ingesta usando el Patrón Factory.
+* [x] **Fase 2: Transformación Analítica, Fusión Numérica y Perfilado**
+    * [x] Carga perezosa con Polars (`scan_csv`) y alineamiento temporal a grilla de 15 minutos.
+    * [x] Aplicación del Patrón Strategy para la purga heurística (NighttimeZeroing, HampelFilter, MissingValueImputer).
+    * [x] Volcado final en Apache Parquet comprimido (Zstandard) a GCS (Capa Oro).
 
 Después de la configuración de entorno del proyecto, sigue las configuraciones necesarias para obtener las credenciales que usaremos para los servicios de Google Cloud Platform. Estas son:
 
