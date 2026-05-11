@@ -1,6 +1,6 @@
 # ETL Solar Serverless - Procesamiento del Dataset PVOD ☀️
 
-> **Estado del Proyecto:** 🚧 En construcción (Fase 2: Transformación Analítica y Limpieza de Datos).
+> **Estado del Proyecto:** 🚧 En construcción (Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta).
 
 ## 📖 Descripción del Proyecto
 
@@ -34,9 +34,9 @@ El desarrollo de este proyecto está dividido en milestones progresivos:
     * [x] Carga perezosa con Polars (`scan_csv`) y alineamiento temporal a grilla de 15 minutos.
     * [x] Aplicación del Patrón Strategy para la purga heurística (NighttimeZeroing, HampelFilter, MissingValueImputer).
     * [x] Volcado final en Apache Parquet comprimido (Zstandard) a GCS (Capa Oro).
-* [ ] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad**
-    * Implementación de JSON Structured Logging integrado con Google Cloud Logging.
-    * Ejecución atómica e idempotente del BigQuery Load Job.
+* [x] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad**
+    * [x] Implementación de JSON Structured Logging integrado con Google Cloud Logging.
+    * [x] Ejecución atómica e idempotente del BigQuery Load Job.
 * [ ] **Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta**
     * Desarrollo de la API con FastAPI y Pydantic.
     * Despliegue final de la imagen multi-stage en Google Cloud Run.[cite: 364, 365].
