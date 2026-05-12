@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # ── BigQuery ─────────────────────────────────────────────────
     bq_dataset_id: str
     bq_table_id: str
+    bq_max_bytes_billed: int = 104857600  # 100 MB default quota
 
     # ── Cloud Storage (Gold Layer Buffer) ────────────────────────
     gcs_bucket_name: str

@@ -37,6 +37,40 @@ El desarrollo de este proyecto está dividido en milestones progresivos:
 * [x] **Fase 3: Integración Transaccional Resiliente y Despliegue de Observabilidad**
     * [x] Implementación de JSON Structured Logging integrado con Google Cloud Logging.
     * [x] Ejecución atómica e idempotente del BigQuery Load Job.
-* [ ] **Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta**
-    * Desarrollo de la API con FastAPI y Pydantic.
-    * Despliegue final de la imagen multi-stage en Google Cloud Run.[cite: 364, 365].
+* [x] **Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta**
+    * [x] Desarrollo de la API con FastAPI y Pydantic.
+    * [x] Contenedorización multi-stage purgada y validada.
+    * [x] Scripts de despliegue final en Google Cloud Run y Artifact Registry.
+
+## 🚀 Despliegue y Uso (Cloud Run)
+
+Para desplegar la aplicación en Google Cloud Run, sigue estos pasos desde tu entorno local (asegurando tener `gcloud` autenticado y `docker` corriendo):
+
+1. **Construir y subir la imagen (Artifact Registry):**
+   ```bash
+   ./scripts/build_and_push.sh
+   ```
+
+2. **Desplegar la API Serverless (Cloud Run):**
+   ```bash
+   ./scripts/deploy_to_cloud_run.sh
+   ```
+   *Nota: El servicio está configurado por defecto para **escalar a cero** (`--min-instances 0`) minimizando costos.*
+
+### Consultando la API
+
+Una vez desplegada (o corriendo localmente), puedes realizar consultas de agregación de potencia. La API está protegida por un límite de costos gratuito usando la funcionalidad de cuota de BigQuery (`maximum_bytes_billed`) y soporta **Dry Runs**.
+
+Ejemplo de llamada `cURL` (reemplaza `[URL]` por tu endpoint de Cloud Run o `http://localhost:8080`):
+
+```bash
+curl -X POST "[URL]/api/v1/metrics/aggregate" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "start_date": "2018-07-01T00:00:00",
+           "end_date": "2018-07-02T23:59:59",
+           "dry_run": true
+         }'
+```
+
+La respuesta estimará los costos en bytes sin incurrir en facturación real de GCP si `dry_run` es `true`.
