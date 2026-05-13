@@ -12,9 +12,11 @@ from __future__ import annotations
 import logging
 
 from fastapi import FastAPI
+from google.cloud import bigquery
 
 from app.application.config import Settings
 from app.infrastructure.cloud_logging import setup_cloud_logging
+from app.interfaces.api import router as api_router
 
 # ── Inicialización de Configuración y Logging ────────────────────────
 settings = Settings()
@@ -48,6 +50,20 @@ async def on_startup() -> None:
             },
         },
     )
+    
+    # Inicializar cliente BigQuery para reciclar conexiones
+    try:
+        if settings.google_application_credentials:
+            app.state.bq_client = bigquery.Client.from_service_account_json(
+                settings.google_application_credentials
+            )
+        else:
+            app.state.bq_client = bigquery.Client(project=settings.gcp_project_id)
+        logger.info("Cliente BigQuery inicializado exitosamente en app.state")
+    except Exception as exc:
+        logger.error(f"Fallo al inicializar cliente BigQuery: {exc}")
+
+app.include_router(api_router)
 
 
 @app.get("/")
