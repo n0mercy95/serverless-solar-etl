@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # ── Google Cloud Platform ────────────────────────────────────
     gcp_project_id: str
-    google_application_credentials: str
+    google_application_credentials: str | None = None
 
     # ── BigQuery ─────────────────────────────────────────────────
     bq_dataset_id: str

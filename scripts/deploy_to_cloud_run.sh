@@ -5,6 +5,17 @@
 
 set -e
 
+# Cargar variables de entorno desde .env
+ENV_FILE="$(dirname "$0")/../.env"
+if [ -f "$ENV_FILE" ]; then
+    set -a  # Exportar automáticamente todas las variables
+    source "$ENV_FILE"
+    set +a
+    echo "✅ Variables cargadas desde .env"
+else
+    echo "⚠️  Archivo .env no encontrado en: $ENV_FILE"
+fi
+
 # Configuración por defecto (reemplazar con los valores reales)
 PROJECT_ID=${GCP_PROJECT_ID:-"tu-proyecto-gcp"}
 REGION=${GCP_REGION:-"us-central1"}
@@ -41,8 +52,8 @@ gcloud run deploy ${SERVICE_NAME} \
     --cpu 1 \
     --memory 512Mi \
     --set-env-vars ENVIRONMENT="production",LOG_LEVEL="INFO" \
-    --set-env-vars GCP_PROJECT_ID=${PROJECT_ID} \
-    --set-secrets BQ_DATASET_ID=bq_dataset_id:latest,BQ_TABLE_ID=bq_table_id:latest,GOOGLE_APPLICATION_CREDENTIALS=gcp_credentials:latest
+    --set-env-vars GCP_PROJECT_ID=${PROJECT_ID},GCS_BUCKET_NAME=${GCS_BUCKET_NAME},GITHUB_RAW_URL=${GITHUB_RAW_URL},SCIDB_FALLBACK_URL=${SCIDB_FALLBACK_URL} \
+    --set-secrets BQ_DATASET_ID=bq_dataset_id:latest,BQ_TABLE_ID=bq_table_id:latest
 
 echo -e "\n✅ ¡Despliegue ejecutado!"
 echo "Tu API Serverless está operativa. Utiliza la URL que Cloud Run proveyó arriba para realizar pruebas."
