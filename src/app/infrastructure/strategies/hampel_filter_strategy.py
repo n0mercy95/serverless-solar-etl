@@ -130,7 +130,7 @@ class HampelFilterStrategy(SolarDataCleaningStrategy):
 
         Notes
         -----
-        Se usa ``min_periods=1`` para que ventanas parciales en los
+        Se usa ``min_samples=1`` para que ventanas parciales en los
         extremos de la serie generen valores en lugar de ``null``.
         Cuando la MAD = 0 (datos perfectamente homogéneos), se aplica
         un floor mínimo para evitar falsos negativos en outliers obvios.
@@ -142,7 +142,7 @@ class HampelFilterStrategy(SolarDataCleaningStrategy):
         # ── 1. Calcular mediana móvil ─────────────────────────────────
         df = df.with_columns(
             pl.col(col_name)
-            .rolling_median(window_size=window, center=True, min_periods=1)
+            .rolling_median(window_size=window, center=True, min_samples=1)
             .alias("_rolling_median")
         )
 
@@ -157,7 +157,7 @@ class HampelFilterStrategy(SolarDataCleaningStrategy):
         # Floor en 1e-10 para evitar MAD=0 que causaría falsos negativos
         df = df.with_columns(
             pl.col("_abs_deviation")
-            .rolling_median(window_size=window, center=True, min_periods=1)
+            .rolling_median(window_size=window, center=True, min_samples=1)
             .clip(lower_bound=1e-10)
             .alias("_rolling_mad")
         )
