@@ -4,6 +4,17 @@
 
 set -e
 
+# Cargar variables de entorno desde .env
+ENV_FILE="$(dirname "$0")/../.env"
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
+    echo "✅ Variables cargadas desde .env"
+else
+    echo "⚠️  Archivo .env no encontrado en: $ENV_FILE"
+fi
+
 # Configuración por defecto (reemplazar con los valores reales del proyecto)
 PROJECT_ID=${GCP_PROJECT_ID:-"tu-proyecto-gcp"}
 REGION=${GCP_REGION:-"us-central1"}
@@ -23,8 +34,9 @@ echo "Image URI  : ${IMAGE_URI}"
 echo "=========================================================="
 
 # 1. Construir la imagen Docker (Multi-stage)
+PROJECT_ROOT="$(dirname "$0")/.."
 echo -e "\n[1/3] Construyendo imagen Docker localmente..."
-docker build -t ${IMAGE_URI} .
+docker build --platform linux/amd64 -t ${IMAGE_URI} -f "${PROJECT_ROOT}/Dockerfile" "${PROJECT_ROOT}"
 
 # 2. Autenticar Docker con Artifact Registry
 echo -e "\n[2/3] Autenticando con Google Artifact Registry..."
