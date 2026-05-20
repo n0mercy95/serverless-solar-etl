@@ -17,6 +17,7 @@ from google.cloud import bigquery
 from app.application.config import Settings
 from app.infrastructure.cloud_logging import setup_cloud_logging
 from app.interfaces.api import router as api_router
+from app.interfaces.etl_router import router as etl_router
 
 # ── Inicialización de Configuración y Logging ────────────────────────
 settings = Settings()
@@ -64,6 +65,7 @@ async def on_startup() -> None:
         logger.error(f"Fallo al inicializar cliente BigQuery: {exc}")
 
 app.include_router(api_router)
+app.include_router(etl_router)
 
 
 @app.get("/")

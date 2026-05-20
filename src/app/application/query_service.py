@@ -65,8 +65,8 @@ class BigQueryQueryService:
 
         # 2. Inyección segura de parámetros escalares
         query_params = [
-            bigquery.ScalarQueryParameter("start_date", "DATETIME", request.start_date),
-            bigquery.ScalarQueryParameter("end_date", "DATETIME", request.end_date),
+            bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", request.start_date),
+            bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", request.end_date),
         ]
 
         # 3. Configuración estricta del Job (Dry Run y Control de Costos)

@@ -48,3 +48,37 @@ class DryRunResponse(BaseModel):
 
     estimated_bytes_processed: int
     message: str = "Estimación completada exitosamente sin cargos a facturación."
+
+
+class PipelineRunResponse(BaseModel):
+    """Respuesta de una ejecución del pipeline ETL completo.
+
+    Contiene métricas detalladas de cada paso ejecutado, URIs de
+    artefactos generados y el identificador del Load Job de BigQuery.
+    """
+
+    status: str = Field(
+        ..., description="Estado de la ejecución: 'success' o 'failed'."
+    )
+    records_processed: int = Field(
+        ..., description="Cantidad de registros procesados y cargados."
+    )
+    gcs_uri: str = Field(
+        ..., description="URI del Parquet exportado a la Capa Oro (gs://...)."
+    )
+    bigquery_job_id: str = Field(
+        ..., description="Identificador determinista (MD5) del Load Job de BigQuery."
+    )
+    duration_seconds: float = Field(
+        ..., description="Duración total de la ejecución en segundos."
+    )
+    started_at: str = Field(
+        ..., description="Timestamp ISO 8601 UTC del inicio."
+    )
+    completed_at: str = Field(
+        ..., description="Timestamp ISO 8601 UTC del fin."
+    )
+    steps_completed: list[str] = Field(
+        default_factory=list,
+        description="Lista de pasos completados: extraction, transformation, cleaning, gold_export, bigquery_load.",
+    )
