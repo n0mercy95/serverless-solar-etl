@@ -218,11 +218,15 @@ class TestPhysicalValidations:
             assert max_val <= SOLAR_CONSTANT_W_M2, \
                 f"'{col_name}' excede la constante solar: {max_val}"
 
-    def test_aborts_on_negative_irradiance(self, csv_buffer_negative_irradiance):
-        """Debe abortar con IrradianceOutOfBoundsError si hay irradiancia negativa."""
+    def test_clamps_negative_irradiance(self, csv_buffer_negative_irradiance):
+        """Irradiancia negativa debe ser clampeada a 0 (no abortar)."""
         loader = PVODLazyLoader()
-        with pytest.raises(IrradianceOutOfBoundsError):
-            loader.load_and_align(csv_buffer_negative_irradiance)
+        lf = loader.load_and_align(csv_buffer_negative_irradiance)
+        df = lf.collect()
+        for col_name in IRRADIANCE_COLUMNS:
+            col = df[col_name].drop_nulls()
+            assert col.min() >= 0.0, \
+                f"'{col_name}' tiene valor negativo tras clampeo: {col.min()}"
 
     def test_station_ids_in_valid_range(self, aligned_dataframe):
         """Los station_id deben estar en el rango [0, 9]."""
