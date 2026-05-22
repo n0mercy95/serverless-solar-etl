@@ -3,6 +3,7 @@
 ## Contexto
 
 La Tarea 1.2 del PRD exige implementar las capas de ingesta del CSV consolidado PVOD usando el **Patrón Factory** con dos fuentes:
+
 - **Primaria:** GitHub Raw (`raw.githubusercontent.com`) — archivo `pvod.csv` ya consolidado (271,968 registros).
 - **Contingencia:** ScienceDB (`scidb.cn`) — fallback HTTP directo.
 
