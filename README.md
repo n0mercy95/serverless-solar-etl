@@ -1,21 +1,33 @@
 # ETL Solar Serverless - Procesamiento del Dataset PVOD ☀️
 
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![Google Cloud](https://img.shields.io/badge/GCP-Serverless-4285F4?logo=google-cloud)
+![Polars](https://img.shields.io/badge/Polars-Blazing%20Fast-E6A514)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-Multi--stage-2496ED?logo=docker)
+
 > **Estado del Proyecto:** 🚧 En construcción (Fase 4: Contenedorización Final, Despliegue API Serverless y Servicio de Consulta).
 
 ## 📖 Descripción del Proyecto
 
-Este proyecto es un sistema de ingeniería de datos nativo en la nube, diseñado para la ingesta automatizada, limpieza matemática estricta, transformación algorítmica y disponibilidad analítica del Photovoltaic Power Output Dataset (PVOD). 
+La intermitencia es el mayor desafío de la energía solar. Este proyecto resuelve ese problema construyendo un **pipeline de datos serverless de grado industrial**. Al ingestar, limpiar matemáticamente (Zeroing nocturno, filtros Hampel) y alinear datos meteorológicos (NWP) con sensores locales (LMD), este Data Warehouse entrega métricas inmaculadas listas para alimentar modelos de Inteligencia Artificial. El resultado permite a los operadores de redes **predecir la generación con alta precisión**, evitar multas por desbalances y optimizar la venta de energía.
 
-El objetivo principal es habilitar el monitoreo y proporcionar métricas para modelos precisos de pronóstico de potencia fotovoltaica (NWP y LMD), fundamentales para el balanceo de carga en mercados de energía. El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento.
+El flujo culmina exponiendo métricas agregadas mediante una API RESTful de alto rendimiento.
 
 ## 🏗️ Arquitectura del Sistema (GCP)
 
 La solución está diseñada bajo principios de Clean Architecture y opera de forma 100% serverless en Google Cloud Platform (GCP).
 
 * **Orquestación:** Utilización de **Cloud Scheduler** para la invocación asíncrona y automatizada del pipeline ETL.
-* **Almacenamiento Intermedio (Data Lake):** **Cloud Storage** actúa como buffer temporal (nivel oro), almacenando datos extraídos en formato binario altamente comprimido Apache Parquet.
+* **Staging Area (Capa Oro):** **Cloud Storage** actúa como buffer temporal, almacenando datos extraídos en formato binario altamente comprimido Apache Parquet.
 * **Data Warehouse:** **BigQuery** gestiona la persistencia transaccional ACID de los datos procesados, utilizando esquemas estrictamente tipados y almacenamiento columnar.
 * **Procesamiento y API:** Contenedores Docker inmutables desplegados en **Cloud Run** que alojan las rutinas del ETL (basadas en Polars) y el microservicio de la API (construido con FastAPI).
+
+## 🚀 Highlights Técnicos
+
+* **Patrones de Diseño:** Implementación estricta de **Patrón Factory** (ingesta) y **Strategy** (limpieza).
+* **FinOps Integrado:** Protección de costos mediante **Dry Runs** y cuotas límite en BigQuery (`maximum_bytes_billed`).
+* **Performance:** Sustitución de Pandas por **Polars** (Lazy Evaluation) para maximizar la eficiencia de CPU/RAM en contenedores efímeros.
 
 ## 🗺️ Roadmap y Próximos Pasos
 
