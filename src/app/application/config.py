@@ -9,8 +9,13 @@ por Cloud Run / Secret Manager en producción.
 
 from __future__ import annotations
 
-from pydantic import HttpUrl
+from pathlib import Path
+
+from pydantic import HttpUrl, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Raíz del proyecto: config.py → application/ → app/ → src/ → project root
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -21,7 +26,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(_PROJECT_ROOT / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -45,3 +50,31 @@ class Settings(BaseSettings):
     # ── Application ──────────────────────────────────────────────
     environment: str = "development"
     log_level: str = "INFO"
+
+    # ── Resolución de rutas para desarrollo local ────────────────
+    @model_validator(mode="after")
+    def _resolve_credentials_path(self) -> Settings:
+        """Remapea la ruta de credenciales del contenedor Docker a la ruta
+        local equivalente cuando se ejecuta fuera del contenedor.
+
+        En Docker el Dockerfile copia ``src/`` → ``/app/``, entonces
+        ``/app/credentials/credentials.json`` (contenedor) equivale a
+        ``<PROJECT_ROOT>/src/app/credentials/credentials.json`` (local).
+        """
+        cred = self.google_application_credentials
+        if cred is None:
+            return self
+
+        cred_path = Path(cred)
+        if cred_path.exists():
+            # La ruta ya es válida (ej. dentro del contenedor Docker)
+            return self
+
+        # Intentar resolver: /app/X → <PROJECT_ROOT>/src/app/X
+        if cred_path.parts[:2] == ("/", "app"):
+            local_path = _PROJECT_ROOT / "src" / "app" / Path(*cred_path.parts[2:])
+            if local_path.exists():
+                self.google_application_credentials = str(local_path)
+
+        return self
+
