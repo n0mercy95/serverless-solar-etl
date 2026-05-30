@@ -17,6 +17,7 @@ Referencia PRD §4:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import tempfile
 from datetime import datetime, timezone
@@ -69,19 +70,49 @@ class GCSParquetExporter(GoldLayerExportPort):
 
     # ── Contrato ABC ──────────────────────────────────────────────────
 
-    def export_to_gold_layer(self, dataframe: pl.DataFrame) -> str:
+    def export_to_gold_layer(
+        self, dataframe: pl.DataFrame, *, content_hash: str | None = None
+    ) -> str:
         """Exporta el DataFrame a Parquet comprimido y lo sube a GCS.
 
         Parameters
         ----------
         dataframe : pl.DataFrame
             DataFrame PVOD limpio, post pipeline de limpieza.
+        content_hash : str | None, optional
+            Hash determinista de contenido para nombrar e identificar el archivo.
 
         Returns
         -------
         str
             URI GCS del Parquet exportado (``gs://bucket/gold/pvod_*.parquet``).
         """
+        # ── 0. Verificar si el archivo ya existe en GCS para evitar sobrescribir (Idempotencia) ──
+        if content_hash:
+            blob_name = self._generate_blob_name(content_hash=content_hash)
+            storage_client = (
+                storage.Client.from_service_account_json(self._credentials_path)
+                if self._credentials_path
+                else storage.Client()
+            )
+            bucket = storage_client.bucket(self._bucket_name)
+            blob = bucket.blob(blob_name)
+            try:
+                if blob.exists():
+                    gcs_uri = f"gs://{self._bucket_name}/{blob_name}"
+                    logger.info(
+                        "El archivo Parquet ya existe en GCS. Reusando URI existente (idempotente).",
+                        extra={
+                            "attributes": {
+                                "gcs_uri": gcs_uri,
+                                "rows_exported": dataframe.height,
+                            },
+                        },
+                    )
+                    return gcs_uri
+            except Exception as exc:
+                logger.warning(f"Error al verificar existencia de blob en GCS: {exc}")
+
         logger.info(
             "Iniciando exportación a Capa Oro (GCS Parquet)",
             extra={
@@ -100,7 +131,7 @@ class GCSParquetExporter(GoldLayerExportPort):
         parquet_path = self._write_parquet(dataframe)
 
         # ── 3. Upload a GCS ───────────────────────────────────────────
-        blob_name = self._generate_blob_name()
+        blob_name = self._generate_blob_name(content_hash=content_hash)
         gcs_uri = self._upload_to_gcs(parquet_path, blob_name)
 
         logger.info(
@@ -220,14 +251,21 @@ class GCSParquetExporter(GoldLayerExportPort):
         return parquet_path
 
     @staticmethod
-    def _generate_blob_name() -> str:
-        """Genera el nombre del blob en GCS con timestamp UTC.
+    def _generate_blob_name(*, content_hash: str | None = None) -> str:
+        """Genera el nombre del blob en GCS determinísticamente usando un hash o con timestamp.
+
+        Parameters
+        ----------
+        content_hash : str | None, optional
+            Hash determinista de contenido (ej. MD5 del CSV original).
 
         Returns
         -------
         str
-            Nombre del blob: ``gold/pvod_YYYYMMDD_HHMMSS.parquet``
+            Nombre del blob: ``gold/pvod_<hash>.parquet`` o ``gold/pvod_<timestamp>.parquet``
         """
+        if content_hash:
+            return f"{GCS_GOLD_PREFIX}{PARQUET_BLOB_PREFIX}{content_hash}.parquet"
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         return f"{GCS_GOLD_PREFIX}{PARQUET_BLOB_PREFIX}{ts}.parquet"
 

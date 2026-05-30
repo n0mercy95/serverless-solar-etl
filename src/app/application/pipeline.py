@@ -21,6 +21,7 @@ Referencia PRD §2:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
@@ -147,6 +148,7 @@ class SolarETLPipeline:
             # ── Paso 1: Extracción (Fase 1.2 — Factory Pattern) ──────
             logger.info("▶ Paso 1/5: Extracción del CSV PVOD")
             buffer = self._extraction_factory.extract_with_fallback()
+            csv_md5 = hashlib.md5(buffer.getvalue()).hexdigest()
             buffer_size_mb = round(buffer.getbuffer().nbytes / (1024 * 1024), 2)
             steps_completed.append("extraction")
 
@@ -192,7 +194,9 @@ class SolarETLPipeline:
 
             # ── Paso 4: Export Parquet → GCS (Fase 2.3 — Gold Layer) ─
             logger.info("▶ Paso 4/5: Exportación Parquet a Capa Oro (GCS)")
-            gcs_uri = self._gold_exporter.export_to_gold_layer(clean_df)
+            gcs_uri = self._gold_exporter.export_to_gold_layer(
+                clean_df, content_hash=csv_md5
+            )
             steps_completed.append("gold_export")
 
             logger.info(

@@ -69,8 +69,11 @@ You are now logged in as [tu-email@gmail.com].
 Your current project is [tu-proyecto-id].  You can change this setting by running:
   $ gcloud config set project PROJECT_ID
 ```
+### 2. Configuramos proyecto por defecto 
 
-### 2. Asignar permisos de Storage a la Cuenta de Servicio
+Esto es muy importante porque le dice a gcloud sobre qué proyecto de Google Cloud vas a ejecutar los siguientes comandos, evitando que tengas que pasar el parámetro --project en cada uno de ellos.
+
+### 3. Asignar permisos de Storage a la Cuenta de Servicio
 
 La cuenta de servicio de Cloud Run necesita acceso de lectura/escritura al bucket de GCS para subir y leer archivos Parquet:
 
@@ -83,7 +86,7 @@ gcloud storage buckets add-iam-policy-binding \
 
 **Salida esperada:** Una lista de `bindings` en formato YAML confirmando que el rol `roles/storage.objectAdmin` fue asignado correctamente a tu cuenta de servicio.
 
-### 3. Configurar secretos en Secret Manager
+### 4. Configurar secretos en Secret Manager
 
 El nombre del dataset de BigQuery se inyecta en Cloud Run como un secreto. Si necesitas actualizar su valor:
 
