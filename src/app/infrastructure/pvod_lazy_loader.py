@@ -225,6 +225,8 @@ class PVODLazyLoader(PVODTransformationPipeline):
 
         return lf.with_columns(
             pl.coalesce([parsed_1, parsed_2])
+            .dt.replace_time_zone("UTC")
+            .dt.convert_time_zone("Asia/Shanghai")
             .dt.truncate(SAMPLING_INTERVAL_POLARS)
             .alias(TEMPORAL_COLUMN)
         )
