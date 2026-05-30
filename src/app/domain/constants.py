@@ -128,6 +128,25 @@ NIGHTTIME_ZEROING_COLUMNS: tuple[str, ...] = (
 """Columnas forzadas a cero exacto cuando la elevación solar ≤ 0°.
 Incluye irradiancias NWP/LMD y salida de potencia."""
 
+# ── Irradiance Outlier Filter (Desviación NWP vs LMD) ─────────────────
+IRRADIANCE_OUTLIER_RATIO_LOW: float = 0.3
+"""Ratio mínimo NWP/LMD aceptable.  Valores por debajo indican que el
+modelo NWP subestimó gravemente la medición real (o LMD tiene un spike)."""
+
+IRRADIANCE_OUTLIER_RATIO_HIGH: float = 3.0
+"""Ratio máximo NWP/LMD aceptable.  Valores por encima indican que el
+modelo NWP sobreestimó gravemente la irradiancia real."""
+
+IRRADIANCE_OUTLIER_MIN_THRESHOLD: float = 50.0
+"""Umbral mínimo de irradiancia (W/m²) para aplicar el filtro de ratio.
+Para valores bajos (amanecer/atardecer), ratios extremos son normales
+debido a desfases temporales en las transiciones de luz."""
+
+IRRADIANCE_OUTLIER_PAIRS: tuple[tuple[str, str], ...] = (
+    ("nwp_globalirrad", "lmd_totalirrad"),
+)
+"""Pares de columnas (NWP, LMD) sobre los que se aplica el filtro de outliers."""
+
 # ── Missing Value Imputation ──────────────────────────────────────────
 IMPUTATION_COLUMNS: tuple[str, ...] = (
     "nwp_globalirrad",

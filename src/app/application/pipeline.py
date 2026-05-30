@@ -29,6 +29,8 @@ from datetime import datetime, timezone
 
 from app.application.cleaning_pipeline import CleaningPipelineExecutor
 from app.application.config import Settings
+from app.application.data_profiler import DataProfiler
+from app.application.scatter_plot_generator import ScatterPlotGenerator
 from app.application.data_warehouse_port import DataWarehouseRepository
 from app.application.extraction_factory import ExtractionFactory
 from app.application.gold_layer_port import GoldLayerExportPort
@@ -107,6 +109,7 @@ class SolarETLPipeline:
         cleaning_executor: CleaningPipelineExecutor,
         gold_exporter: GoldLayerExportPort,
         warehouse: DataWarehouseRepository,
+        scatter_plot_generator: ScatterPlotGenerator,
     ) -> None:
         self._settings = settings
         self._extraction_factory = extraction_factory
@@ -114,6 +117,7 @@ class SolarETLPipeline:
         self._cleaning_executor = cleaning_executor
         self._gold_exporter = gold_exporter
         self._warehouse = warehouse
+        self._scatter_plot_generator = scatter_plot_generator
 
     def execute(self) -> PipelineResult:
         """Ejecuta el pipeline ETL completo de principio a fin.
@@ -176,6 +180,12 @@ class SolarETLPipeline:
                 },
             )
 
+            # ── Data Profiling: Pre-Cleaning ──────────────────────────
+            logger.info("Ejecutando Data Profiling: Pre-Cleaning")
+            pre_profiler = DataProfiler(dataframe)
+            pre_report = pre_profiler.generate_report("Pre-Cleaning")
+            logger.info(f"\n{pre_report}")
+
             # ── Paso 3: Limpieza Heurística (Fase 2.2 — Strategy) ───
             logger.info("▶ Paso 3/5: Pipeline de limpieza heurística")
             clean_df = self._cleaning_executor.execute(dataframe)
@@ -191,6 +201,27 @@ class SolarETLPipeline:
                     },
                 },
             )
+
+            # ── Data Profiling: Post-Cleaning (Gold) ──────────────────
+            logger.info("Ejecutando Data Profiling: Post-Cleaning (Gold)")
+            post_profiler = DataProfiler(clean_df)
+            post_report = post_profiler.generate_report("Post-Cleaning (Gold)")
+            logger.info(f"\n{post_report}")
+
+            # ── Scatter Plots: NWP vs LMD Irradiance ─────────────────
+            logger.info("Generando scatter plots NWP vs LMD (Pre/Post Cleaning)")
+            plot_uris = self._scatter_plot_generator.generate_and_upload(
+                df_pre=dataframe,
+                df_post=clean_df,
+                content_hash=csv_md5,
+            )
+            if plot_uris:
+                logger.info(
+                    f"Scatter plots generados y subidos: {len(plot_uris)} archivos",
+                    extra={
+                        "attributes": {"plot_uris": plot_uris},
+                    },
+                )
 
             # ── Paso 4: Export Parquet → GCS (Fase 2.3 — Gold Layer) ─
             logger.info("▶ Paso 4/5: Exportación Parquet a Capa Oro (GCS)")
@@ -306,6 +337,9 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
     from app.infrastructure.strategies.hampel_filter_strategy import (
         HampelFilterStrategy,
     )
+    from app.infrastructure.strategies.irradiance_outlier_strategy import (
+        IrradianceOutlierStrategy,
+    )
     from app.infrastructure.strategies.missing_value_imputer_strategy import (
         MissingValueImputerStrategy,
     )
@@ -321,9 +355,10 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
 
     # ── Fase 2.2: Limpieza (orden importa — PRD §3) ─────────────────
     strategies: list[SolarDataCleaningStrategy] = [
-        NighttimeZeroingStrategy(),   # 1. Forma física del ciclo diurno
-        HampelFilterStrategy(),       # 2. Filtrar anomalías de viento
-        MissingValueImputerStrategy(),  # 3. Interpolar gaps restantes
+        NighttimeZeroingStrategy(),     # 1. Forma física del ciclo diurno
+        IrradianceOutlierStrategy(),    # 2. Filtrar desviaciones NWP vs LMD
+        HampelFilterStrategy(),         # 3. Filtrar anomalías de viento
+        MissingValueImputerStrategy(),  # 4. Interpolar gaps restantes (incl. nulls del paso 2)
     ]
     cleaning_executor = CleaningPipelineExecutor(strategies=strategies)
 
@@ -342,6 +377,12 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
         credentials_path=settings.google_application_credentials,
     )
 
+    # ── Scatter Plot Generator ────────────────────────────────────
+    scatter_plot_generator = ScatterPlotGenerator(
+        bucket_name=settings.gcs_bucket_name,
+        credentials_path=settings.google_application_credentials,
+    )
+
     return SolarETLPipeline(
         settings=settings,
         extraction_factory=extraction_factory,
@@ -349,4 +390,5 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
         cleaning_executor=cleaning_executor,
         gold_exporter=gold_exporter,
         warehouse=warehouse,
+        scatter_plot_generator=scatter_plot_generator,
     )

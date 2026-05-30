@@ -50,7 +50,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --min-instances 0 \
     --max-instances 5 \
     --cpu 1 \
-    --memory 512Mi \
+    --memory 1Gi \
     --set-env-vars ENVIRONMENT="production",LOG_LEVEL="INFO" \
     --set-env-vars GCP_PROJECT_ID=${PROJECT_ID},GCS_BUCKET_NAME=${GCS_BUCKET_NAME},GITHUB_RAW_URL=${GITHUB_RAW_URL},SCIDB_FALLBACK_URL=${SCIDB_FALLBACK_URL} \
     --set-secrets BQ_DATASET_ID=bq_dataset_id:latest,BQ_TABLE_ID=bq_table_id:latest
