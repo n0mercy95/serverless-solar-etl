@@ -35,7 +35,9 @@ class GoldLayerExportPort(ABC):
     """
 
     @abstractmethod
-    def export_to_gold_layer(self, dataframe: pl.DataFrame) -> str:
+    def export_to_gold_layer(
+        self, dataframe: pl.DataFrame, *, content_hash: str | None = None
+    ) -> str:
         """Exporta el DataFrame limpio a Parquet y lo sube a la Capa Oro.
 
         Parameters
