@@ -147,11 +147,7 @@ class ScatterPlotGenerator:
     def _cleanup_old_plots(self) -> None:
         """Borra todos los archivos existentes en el prefijo `plots/` de GCS."""
         try:
-            client = (
-                storage.Client.from_service_account_json(self._credentials_path)
-                if self._credentials_path
-                else storage.Client()
-            )
+            client = storage.Client()
             bucket = client.bucket(self._bucket_name)
             blobs = list(bucket.list_blobs(prefix=GCS_PLOTS_PREFIX))
             
@@ -407,11 +403,7 @@ class ScatterPlotGenerator:
         str
             URI GCS completa: ``gs://bucket/blob_name``
         """
-        client = (
-            storage.Client.from_service_account_json(self._credentials_path)
-            if self._credentials_path
-            else storage.Client()
-        )
+        client = storage.Client()
 
         bucket = client.bucket(self._bucket_name)
         blob = bucket.blob(blob_name)

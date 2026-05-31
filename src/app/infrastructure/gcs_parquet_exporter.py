@@ -90,11 +90,7 @@ class GCSParquetExporter(GoldLayerExportPort):
         # ── 0. Verificar si el archivo ya existe en GCS para evitar sobrescribir (Idempotencia) ──
         if content_hash:
             blob_name = self._generate_blob_name(content_hash=content_hash)
-            storage_client = (
-                storage.Client.from_service_account_json(self._credentials_path)
-                if self._credentials_path
-                else storage.Client()
-            )
+            storage_client = storage.Client()
             bucket = storage_client.bucket(self._bucket_name)
             blob = bucket.blob(blob_name)
             try:
@@ -290,9 +286,7 @@ class GCSParquetExporter(GoldLayerExportPort):
             Si falla la conexión o el upload a GCS.
         """
         try:
-            client = storage.Client.from_service_account_json(
-                self._credentials_path
-            ) if self._credentials_path else storage.Client()
+            client = storage.Client()
 
             bucket = client.bucket(self._bucket_name)
             blob = bucket.blob(blob_name)

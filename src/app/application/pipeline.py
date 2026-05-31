@@ -365,7 +365,6 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
     # ── Fase 2.3: Export Gold Layer ──────────────────────────────────
     gold_exporter = GCSParquetExporter(
         bucket_name=settings.gcs_bucket_name,
-        credentials_path=settings.google_application_credentials,
     )
 
     # ── Fase 3.2: BigQuery Load ──────────────────────────────────────
@@ -374,13 +373,11 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
         dataset_id=settings.bq_dataset_id,
         table_id=settings.bq_table_id,
         bucket_name=settings.gcs_bucket_name,
-        credentials_path=settings.google_application_credentials,
     )
 
     # ── Scatter Plot Generator ────────────────────────────────────
     scatter_plot_generator = ScatterPlotGenerator(
         bucket_name=settings.gcs_bucket_name,
-        credentials_path=settings.google_application_credentials,
     )
 
     return SolarETLPipeline(

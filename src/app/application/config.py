@@ -61,20 +61,33 @@ class Settings(BaseSettings):
         ``/app/credentials/credentials.json`` (contenedor) equivale a
         ``<PROJECT_ROOT>/src/app/credentials/credentials.json`` (local).
         """
+        import os
+
         cred = self.google_application_credentials
         if cred is None:
+            # Si no hay credenciales configuradas en el entorno ni en el .env,
+            # no hacemos nada para que ADC use el servidor de metadatos o WIF.
             return self
 
         cred_path = Path(cred)
         if cred_path.exists():
-            # La ruta ya es válida (ej. dentro del contenedor Docker)
+            # La ruta ya es válida (ej. dentro del contenedor Docker o ruta absoluta)
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(cred_path.resolve())
             return self
 
-        # Intentar resolver: /app/X → <PROJECT_ROOT>/src/app/X
+        # Intentar resolver en entorno local: /app/X -> <PROJECT_ROOT>/src/app/X
         if cred_path.parts[:2] == ("/", "app"):
             local_path = _PROJECT_ROOT / "src" / "app" / Path(*cred_path.parts[2:])
             if local_path.exists():
                 self.google_application_credentials = str(local_path)
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(local_path.resolve())
+                return self
+
+        # Si el archivo no existe en el disco, eliminamos la variable de os.environ
+        # para que la biblioteca google-auth no intente leer un path inválido y falle.
+        if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
+            del os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
 
         return self
+
 
