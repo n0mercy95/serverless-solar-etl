@@ -118,12 +118,8 @@ class BigQueryAdapter(DataWarehouseRepository):
             # 2. Configurar el LoadJob (Particiones, Clústeres, Modo Parquet)
             job_config = self._build_load_job_config(bigquery)
 
-            # 3. Instanciar cliente y lanzar Load Job
-            bq_client = (
-                bigquery.Client.from_service_account_json(self._credentials_path)
-                if self._credentials_path
-                else bigquery.Client(project=self._project_id)
-            )
+            # 3. Instanciar cliente y lanzar Load Job usando ADC nativo
+            bq_client = bigquery.Client(project=self._project_id)
 
             logger.info(
                 "Lanzando Load Job en BigQuery (TRUNCATE + reemplazo total)",
