@@ -44,6 +44,7 @@ from app.domain.constants import (
 from app.infrastructure.strategies.hampel_filter_strategy import HampelFilterStrategy
 from app.infrastructure.strategies.missing_value_imputer_strategy import MissingValueImputerStrategy
 from app.infrastructure.strategies.nighttime_zeroing_strategy import NighttimeZeroingStrategy
+from app.infrastructure.strategies.thermodynamic_bounds_strategy import ThermodynamicBoundsStrategy
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -67,8 +68,13 @@ class TestCleaningStrategyPort:
         assert hasattr(SolarDataCleaningStrategy, "apply_cleaning")
 
     def test_all_strategies_implement_contract(self):
-        """Las 3 estrategias concretas deben implementar el contrato."""
-        for StrategyClass in (NighttimeZeroingStrategy, HampelFilterStrategy, MissingValueImputerStrategy):
+        """Las estrategias concretas deben implementar el contrato."""
+        for StrategyClass in (
+            NighttimeZeroingStrategy,
+            ThermodynamicBoundsStrategy,
+            HampelFilterStrategy,
+            MissingValueImputerStrategy,
+        ):
             assert issubclass(StrategyClass, SolarDataCleaningStrategy), \
                 f"{StrategyClass.__name__} no implementa SolarDataCleaningStrategy"
 
@@ -334,3 +340,57 @@ class TestCleaningPipelineExecutor:
         original_ids = set(aligned_dataframe[STATION_COLUMN].unique().to_list())
         result_ids = set(result[STATION_COLUMN].unique().to_list())
         assert original_ids == result_ids
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 6. THERMODYNAMIC BOUNDS STRATEGY
+# ══════════════════════════════════════════════════════════════════════
+
+class TestThermodynamicBoundsStrategy:
+    """Valida la estrategia de límites físicos y termodinámicos."""
+
+    def test_nullifies_out_of_bounds_humidity(self):
+        """La humedad fuera de [0, 100] debe ser forzada a null."""
+        strategy = ThermodynamicBoundsStrategy()
+        df = pl.DataFrame({
+            "nwp_humidity": [50.0, -10.0, 100.0, 150.0, None],
+            "nwp_winddirection": [180.0, 180.0, 180.0, 180.0, 180.0],
+            "lmd_winddirection": [180.0, 180.0, 180.0, 180.0, 180.0],
+            "nwp_pressure": [1013.0, 1013.0, 1013.0, 1013.0, 1013.0],
+            "lmd_pressure": [1013.0, 1013.0, 1013.0, 1013.0, 1013.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        expected_humidity = [50.0, None, 100.0, None, None]
+        assert result["nwp_humidity"].to_list() == expected_humidity
+
+    def test_nullifies_out_of_bounds_wind_direction(self):
+        """La dirección del viento fuera de [0, 360] debe ser forzada a null."""
+        strategy = ThermodynamicBoundsStrategy()
+        df = pl.DataFrame({
+            "nwp_humidity": [50.0, 50.0, 50.0, 50.0, 50.0],
+            "nwp_winddirection": [180.0, -5.0, 360.0, 370.0, None],
+            "lmd_winddirection": [0.0, 360.0, 100.0, -1.0, 200.0],
+            "nwp_pressure": [1013.0, 1013.0, 1013.0, 1013.0, 1013.0],
+            "lmd_pressure": [1013.0, 1013.0, 1013.0, 1013.0, 1013.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["nwp_winddirection"].to_list() == [180.0, None, 360.0, None, None]
+        assert result["lmd_winddirection"].to_list() == [0.0, 360.0, 100.0, None, 200.0]
+
+    def test_nullifies_out_of_bounds_pressure(self):
+        """La presión atmosférica fuera de [800, 1100] debe ser forzada a null."""
+        strategy = ThermodynamicBoundsStrategy()
+        df = pl.DataFrame({
+            "nwp_humidity": [50.0, 50.0, 50.0, 50.0, 50.0],
+            "nwp_winddirection": [180.0, 180.0, 180.0, 180.0, 180.0],
+            "lmd_winddirection": [180.0, 180.0, 180.0, 180.0, 180.0],
+            "nwp_pressure": [1013.0, 750.0, 1100.0, 1150.0, None],
+            "lmd_pressure": [800.0, 1099.0, 0.0, 1050.0, None],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["nwp_pressure"].to_list() == [1013.0, None, 1100.0, None, None]
+        assert result["lmd_pressure"].to_list() == [800.0, 1099.0, None, 1050.0, None]
+

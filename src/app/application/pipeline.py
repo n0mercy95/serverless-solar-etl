@@ -346,6 +346,9 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
     from app.infrastructure.strategies.nighttime_zeroing_strategy import (
         NighttimeZeroingStrategy,
     )
+    from app.infrastructure.strategies.thermodynamic_bounds_strategy import (
+        ThermodynamicBoundsStrategy,
+    )
 
     # ── Fase 1.2: Extracción ─────────────────────────────────────────
     extraction_factory = ExtractionFactory(settings)
@@ -356,9 +359,10 @@ def build_pipeline(settings: Settings) -> SolarETLPipeline:
     # ── Fase 2.2: Limpieza (orden importa — PRD §3) ─────────────────
     strategies: list[SolarDataCleaningStrategy] = [
         NighttimeZeroingStrategy(),     # 1. Forma física del ciclo diurno
-        IrradianceOutlierStrategy(),    # 2. Filtrar desviaciones NWP vs LMD
-        HampelFilterStrategy(),         # 3. Filtrar anomalías de viento
-        MissingValueImputerStrategy(),  # 4. Interpolar gaps restantes (incl. nulls del paso 2)
+        ThermodynamicBoundsStrategy(),  # 2. Límites físicos y termodinámicos absolutos [NEW]
+        IrradianceOutlierStrategy(),    # 3. Filtrar desviaciones NWP vs LMD
+        HampelFilterStrategy(),         # 4. Filtrar anomalías de viento
+        MissingValueImputerStrategy(),  # 5. Interpolar gaps restantes (incl. nulls del paso 2)
     ]
     cleaning_executor = CleaningPipelineExecutor(strategies=strategies)
 

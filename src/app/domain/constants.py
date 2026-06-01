@@ -106,6 +106,19 @@ Derivado de 1/Φ⁻¹(3/4) para distribución normal (Rousseeuw & Croux 1993).""
 WIND_SPEED_COLUMNS: tuple[str, ...] = ("nwp_windspeed", "lmd_windspeed")
 """Columnas de velocidad de viento sujetas al filtro Hampel."""
 
+# ── Límites Termodinámicos y Físicos de Variables Meteorológicas ────────
+HUMIDITY_MIN: float = 0.0
+HUMIDITY_MAX: float = 100.0
+"""Límites de humedad relativa (porcentaje, inclusivos)."""
+
+WIND_DIRECTION_MIN: float = 0.0
+WIND_DIRECTION_MAX: float = 360.0
+"""Límites de dirección del viento en la rosa de los vientos (grados, inclusivos)."""
+
+PRESSURE_MIN: float = 800.0
+PRESSURE_MAX: float = 1100.0
+"""Límites de presión atmosférica a nivel terrestre (hPa, inclusivos)."""
+
 # ── Nighttime Zeroing (Elevación Solar) ───────────────────────────────
 DEFAULT_STATION_LATITUDE: float = 38.0
 """Latitud representativa de las estaciones PVOD (~centro Hebei, China).
