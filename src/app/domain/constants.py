@@ -119,6 +119,10 @@ PRESSURE_MIN: float = 800.0
 PRESSURE_MAX: float = 1100.0
 """Límites de presión atmosférica a nivel terrestre (hPa, inclusivos)."""
 
+# ── Criterio de Desviación Térmica Cruzada ────────────────────────────
+MAX_THERMAL_DELTA: float = 15.0
+"""Desviación térmica máxima aceptable entre predicción NWP y sensor LMD (°C)."""
+
 # ── Nighttime Zeroing (Elevación Solar) ───────────────────────────────
 DEFAULT_STATION_LATITUDE: float = 38.0
 """Latitud representativa de las estaciones PVOD (~centro Hebei, China).
