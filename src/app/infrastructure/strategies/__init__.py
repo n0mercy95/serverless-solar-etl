@@ -13,6 +13,9 @@ from app.infrastructure.strategies.missing_value_imputer_strategy import (
 from app.infrastructure.strategies.nighttime_zeroing_strategy import (
     NighttimeZeroingStrategy,
 )
+from app.infrastructure.strategies.thermal_delta_strategy import (
+    ThermalDeltaStrategy,
+)
 from app.infrastructure.strategies.thermodynamic_bounds_strategy import (
     ThermodynamicBoundsStrategy,
 )
@@ -23,5 +26,6 @@ __all__ = [
     "IrradianceOutlierStrategy",
     "MissingValueImputerStrategy",
     "NighttimeZeroingStrategy",
+    "ThermalDeltaStrategy",
     "ThermodynamicBoundsStrategy",
 ]

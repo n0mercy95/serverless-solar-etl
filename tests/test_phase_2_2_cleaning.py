@@ -45,6 +45,7 @@ from app.infrastructure.strategies.hampel_filter_strategy import HampelFilterStr
 from app.infrastructure.strategies.irradiance_consistency_strategy import IrradianceConsistencyStrategy
 from app.infrastructure.strategies.missing_value_imputer_strategy import MissingValueImputerStrategy
 from app.infrastructure.strategies.nighttime_zeroing_strategy import NighttimeZeroingStrategy
+from app.infrastructure.strategies.thermal_delta_strategy import ThermalDeltaStrategy
 from app.infrastructure.strategies.thermodynamic_bounds_strategy import ThermodynamicBoundsStrategy
 
 
@@ -75,6 +76,7 @@ class TestCleaningStrategyPort:
             ThermodynamicBoundsStrategy,
             IrradianceConsistencyStrategy,
             HampelFilterStrategy,
+            ThermalDeltaStrategy,
             MissingValueImputerStrategy,
         ):
             assert issubclass(StrategyClass, SolarDataCleaningStrategy), \
@@ -442,5 +444,53 @@ class TestIrradianceConsistencyStrategy:
         
         assert result["lmd_totalirrad"].to_list() == [100.0, None, 50.0]
         assert result["lmd_diffuseirrad"].to_list() == [None, 40.0, 30.0]
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 8. THERMAL DELTA STRATEGY
+# ══════════════════════════════════════════════════════════════════════
+
+class TestThermalDeltaStrategy:
+    """Valida la estrategia de desviación térmica cruzada."""
+
+    def test_preserves_consistent_temperature(self):
+        """Si la diferencia es <= 15°C, no se modifica nada."""
+        strategy = ThermalDeltaStrategy()
+        df = pl.DataFrame({
+            "nwp_temperature": [25.0, 10.0, -5.0],
+            "lmd_temperature": [28.0, 20.0, -10.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["nwp_temperature"].to_list() == [25.0, 10.0, -5.0]
+        assert result["lmd_temperature"].to_list() == [28.0, 20.0, -10.0]
+
+    def test_nullifies_inconsistent_local_temperature(self):
+        """Si la diferencia es > 15°C, solo se anula lmd_temperature."""
+        strategy = ThermalDeltaStrategy()
+        df = pl.DataFrame({
+            "nwp_temperature": [25.0, 10.0, 20.0],
+            "lmd_temperature": [5.0, 30.0, 20.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        # Fila 0: |25 - 5| = 20 > 15 -> lmd_temperature es null
+        # Fila 1: |10 - 30| = 20 > 15 -> lmd_temperature es null
+        # Fila 2: |20 - 20| = 0 <= 15 -> lmd_temperature es intacto
+        assert result["nwp_temperature"].to_list() == [25.0, 10.0, 20.0]
+        assert result["lmd_temperature"].to_list() == [None, None, 20.0]
+
+    def test_resilient_to_existing_nulls(self):
+        """Si alguna temperatura ya es null, no debe fallar ni modificar nada."""
+        strategy = ThermalDeltaStrategy()
+        df = pl.DataFrame({
+            "nwp_temperature": [25.0, None, 20.0],
+            "lmd_temperature": [None, 30.0, 20.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["nwp_temperature"].to_list() == [25.0, None, 20.0]
+        assert result["lmd_temperature"].to_list() == [None, 30.0, 20.0]
+
 
 
