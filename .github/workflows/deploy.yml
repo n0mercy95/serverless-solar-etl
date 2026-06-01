@@ -1,0 +1,48 @@
+name: Deploy Solar ETL to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+# CRÍTICO: Esto le da permiso a GitHub Actions para generar el token OIDC
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Paso mágico: Autenticación WIF sin JSON
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/264931673910/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'lector-serverless-solar-etl@serverless-solar-etl.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      # Ejecuta el script de Build inyectando sus variables necesarias
+      - name: Build and Push Docker Image
+        env:
+          GCP_PROJECT_ID: 'serverless-solar-etl' # <-- Reemplaza si tu ID de proyecto es diferente
+          GCP_REGION: 'us-central1'
+          AR_REPO_NAME: 'solar-etl-repo'
+        run: ./scripts/build_and_push.sh
+
+      # Ejecuta el script de Deploy inyectando TODAS las variables
+      - name: Deploy to Cloud Run
+        env:
+          GCP_PROJECT_ID: 'serverless-solar-etl' # <-- Reemplaza si tu ID de proyecto es diferente
+          GCP_REGION: 'us-central1'
+          AR_REPO_NAME: 'solar-etl-repo'
+          GCS_BUCKET_NAME: 'tu-bucket-golden-layer' # <-- Pon el nombre real de tu bucket de GCS
+          GITHUB_RAW_URL: 'https://raw.githubusercontent.com/n0mercy95/serverless-solar-etl/data/upload-pvod-dataset/data/pvod.csv'
+          SCIDB_FALLBACK_URL: 'https://www.scidb.cn/s/cye2Q3'
+        run: ./scripts/deploy_to_cloud_run.sh
