@@ -42,6 +42,7 @@ from app.domain.constants import (
     WIND_SPEED_COLUMNS,
 )
 from app.infrastructure.strategies.hampel_filter_strategy import HampelFilterStrategy
+from app.infrastructure.strategies.irradiance_consistency_strategy import IrradianceConsistencyStrategy
 from app.infrastructure.strategies.missing_value_imputer_strategy import MissingValueImputerStrategy
 from app.infrastructure.strategies.nighttime_zeroing_strategy import NighttimeZeroingStrategy
 from app.infrastructure.strategies.thermodynamic_bounds_strategy import ThermodynamicBoundsStrategy
@@ -72,6 +73,7 @@ class TestCleaningStrategyPort:
         for StrategyClass in (
             NighttimeZeroingStrategy,
             ThermodynamicBoundsStrategy,
+            IrradianceConsistencyStrategy,
             HampelFilterStrategy,
             MissingValueImputerStrategy,
         ):
@@ -393,4 +395,52 @@ class TestThermodynamicBoundsStrategy:
         
         assert result["nwp_pressure"].to_list() == [1013.0, None, 1100.0, None, None]
         assert result["lmd_pressure"].to_list() == [800.0, 1099.0, None, 1050.0, None]
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 7. IRRADIANCE CONSISTENCY STRATEGY
+# ══════════════════════════════════════════════════════════════════════
+
+class TestIrradianceConsistencyStrategy:
+    """Valida la consistencia física de irradiancia local lmd."""
+
+    def test_preserves_consistent_irradiance(self):
+        """Si difusa <= total (global), los valores no cambian."""
+        strategy = IrradianceConsistencyStrategy()
+        df = pl.DataFrame({
+            "lmd_totalirrad": [100.0, 50.0, 0.0],
+            "lmd_diffuseirrad": [30.0, 50.0, 0.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["lmd_totalirrad"].to_list() == [100.0, 50.0, 0.0]
+        assert result["lmd_diffuseirrad"].to_list() == [30.0, 50.0, 0.0]
+
+    def test_nullifies_inconsistent_irradiance(self):
+        """Si difusa > total, ambas columnas se fijan a null."""
+        strategy = IrradianceConsistencyStrategy()
+        df = pl.DataFrame({
+            "lmd_totalirrad": [100.0, 50.0, 20.0],
+            "lmd_diffuseirrad": [120.0, 40.0, 25.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        # Fila 0: 120 > 100 -> null, null
+        # Fila 1: 40 <= 50 -> intacto
+        # Fila 2: 25 > 20 -> null, null
+        assert result["lmd_totalirrad"].to_list() == [None, 50.0, None]
+        assert result["lmd_diffuseirrad"].to_list() == [None, 40.0, None]
+
+    def test_resilient_to_existing_nulls(self):
+        """Si alguna columna ya es null, no debe fallar ni modificar la otra."""
+        strategy = IrradianceConsistencyStrategy()
+        df = pl.DataFrame({
+            "lmd_totalirrad": [100.0, None, 50.0],
+            "lmd_diffuseirrad": [None, 40.0, 30.0],
+        })
+        result = strategy.apply_cleaning(df)
+        
+        assert result["lmd_totalirrad"].to_list() == [100.0, None, 50.0]
+        assert result["lmd_diffuseirrad"].to_list() == [None, 40.0, 30.0]
+
 
