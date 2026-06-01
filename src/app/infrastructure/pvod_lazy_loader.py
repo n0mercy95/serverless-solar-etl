@@ -90,6 +90,16 @@ class PVODLazyLoader(PVODTransformationPipeline):
             # ── 2. Carga lazy via scan_csv ────────────────────────────
             lazy_frame = self._scan_csv_lazy(tmp_path)
 
+            # ── 2b. Generar Schema Validation Report ──────────────────
+            from app.application.schema_profiler import SchemaProfiler
+            raw_df = lazy_frame.collect()
+            schema_profiler = SchemaProfiler(raw_df)
+            schema_report = schema_profiler.generate_report(phase_name="Raw Intake")
+            logger.info(f"\n{schema_report}")
+            
+            # Re-crear el LazyFrame a partir del DataFrame cargado para conservar el flujo lazy
+            lazy_frame = raw_df.lazy()
+
             # ── 3. Parsing temporal y truncamiento a 15 min ───────────
             lazy_frame = self._parse_and_truncate_datetime(lazy_frame)
 
