@@ -52,6 +52,24 @@ La solución está diseñada bajo principios de Clean Architecture y opera de fo
 
 ---
 
+## 📊 Evidencia de Calidad y Procesamiento de Datos
+
+Como evidencia de que la extracción de datos estáticos desde GitHub Raw, la posterior transformación según los filtros físicos y heurísticos definidos en [Task 2.2 - data_cleaning.md](file:///Users/matias95lopez/Desktop/serverless-solar-etl/docs/implemented-tasks/Task%202.2%20-%20data_cleaning.md) y la carga final en BigQuery funcionan de manera integrada, presentamos las siguientes visualizaciones obtenidas del dataset procesado:
+
+### 1. Relación NWP vs LMD de la Irradiancia Total (Scatter Plot)
+Este gráfico de dispersión compara la radiación meteorológica predicha (NWP) con la medición local (LMD). La aplicación de la estrategia `IrradianceOutlierStrategy` permite descartar discrepancias físicas severas (por encima o debajo de los ratios realistas de radiación). Como resultado de la limpieza y la interpolación en la Capa Oro, la dispersión se alinea cohesionadamente alrededor del ratio 1:1, reduciendo el ruido analítico y permitiendo un almacenamiento de calidad en Google Cloud.
+
+![Dispersión de Irradiancia NWP vs LMD](docs/images/plots_scatter_post_cleaning_0bd737bf28e0.png)
+
+### 2. Perfil de Potencia vs Hora del Día (Diurnal Power Profile)
+A través de la estrategia `NighttimeZeroingStrategy`, calculamos la elevación solar en base a la latitud y longitud representativas del proyecto PVOD en Hebei, China. Al forzar a cero absoluto todas las variables de irradiancia y producción eléctrica cuando el sol está bajo el horizonte ($\alpha \le 0^\circ$), eliminamos por completo el ruido nocturno e instrumental de los sensores. La curva resultante muestra un perfil diurno limpio y de comportamiento físico correcto, listo para ser consumido en BigQuery o mediante nuestra API.
+
+![Perfil de Potencia vs Hora](docs/images/plots_diurnal_power_profile_post_0bd737bf28e0%20%282%29.png)
+
+Con esto se consolida el objetivo del proyecto: limpiar datos provenientes del dataset PVOD e integrarlos con éxito en la suite serverless de Google Cloud Platform (GCS y BigQuery) con niveles óptimos de calidad de datos.
+
+---
+
 ## ⚙️ Configuración Inicial con Google Cloud
 
 Antes de desplegar, necesitas autenticarte y configurar los permisos de IAM en GCP. Los siguientes pasos solo se ejecutan **una vez** (o cuando cambies de cuenta/proyecto).
